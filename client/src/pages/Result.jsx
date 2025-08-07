@@ -1,64 +1,94 @@
 import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
-export default function Result() {
+function Result() {
   const location = useLocation();
   const navigate = useNavigate();
-  const actor = location.state?.actor;
+  const { runId } = location.state || {};
 
-  const buttonClasses =
-    "px-5 py-2 rounded-md bg-blue-600 text-white font-semibold hover:bg-blue-700 transition";
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!actor) {
-    return (
-      <div className="max-w-2xl mx-auto p-6 text-center mt-20">
-        <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">
-          No Actor Selected
-        </h1>
-        <p className="mb-6 text-gray-700 dark:text-gray-300">
-          Please go back and select an actor to view details.
-        </p>
-        <button className={buttonClasses} onClick={() => navigate("/")}>
-          Go Back
-        </button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const fetchRunStatus = async () => {
+      try {
+        const interval = setInterval(async () => {
+          const response = await fetch(`https://api.apify.com/v2/actor-runs/${runId}`);
+          const data = await response.json();
+
+          if (data.data?.status === "SUCCEEDED") {
+            clearInterval(interval);
+            const resultUrl = data.data?.output?.resultUrl || data.data?.output?.defaultDatasetId;
+
+            setResult(resultUrl);
+            setLoading(false);
+          } else if (["FAILED", "TIMED-OUT", "ABORTED"].includes(data.data?.status)) {
+            clearInterval(interval);
+            setResult("Actor run failed.");
+            setLoading(false);
+          }
+        }, 3000);
+
+        return () => clearInterval(interval);
+      } catch (error) {
+        console.error("Error fetching result:", error);
+        setResult("An error occurred while fetching results.");
+        setLoading(false);
+      }
+    };
+
+    if (runId) {
+      fetchRunStatus();
+    } else {
+      setResult("No run ID provided.");
+      setLoading(false);
+    }
+  }, [runId]);
+
+  const handleBack = () => {
+    navigate("/dashboard");
+  };
 
   return (
-    <div className="max-w-3xl mx-auto p-6 mt-10">
-      <h1 className="text-4xl font-extrabold mb-8 text-gray-900 dark:text-gray-100">
-        Actor Details
-      </h1>
-      <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg p-8 border border-gray-200 dark:border-gray-700">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-200">
-          {actor.name}
-        </h2>
-        <p className="text-base text-gray-600 dark:text-gray-400 mb-6">
-          {actor.description || "No description available."}
-        </p>
-        <div className="space-y-3 text-gray-700 dark:text-gray-300">
-          <p>
-            <span className="font-semibold">Username:</span> {actor.username}
-          </p>
-          <p>
-            <span className="font-semibold">Build Tag:</span>{" "}
-            {actor.defaultRunOptions?.build || "N/A"}
-          </p>
-          <p>
-            <span className="font-semibold">Memory:</span>{" "}
-            {actor.defaultRunOptions?.memory || "N/A"} MB
-          </p>
-          <p>
-            <span className="font-semibold">Timeout:</span>{" "}
-            {actor.defaultRunOptions?.timeoutSecs || "N/A"} secs
-          </p>
+    <div className="flex flex-col items-center justify-center h-screen px-4">
+      <h2 className="text-2xl font-semibold mb-6">Actor Run Result</h2>
+
+      {loading ? (
+        <div className="flex items-center gap-2 text-lg">
+          <Loader2 className="animate-spin" />
+          Fetching result...
         </div>
-      </div>
-      <div className="mt-8 text-center">
-        <button className={buttonClasses} onClick={() => navigate("/")}>
-          Back to Home
-        </button>
-      </div>
+      ) : typeof result === "string" ? (
+        <div className="text-center">
+          <p className="mb-4 break-all">
+            {result.startsWith("http") ? (
+              <>
+                Result URL:
+                <br />
+                <a
+                  href={result}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline break-words"
+                >
+                  {result}
+                </a>
+              </>
+            ) : (
+              result
+            )}
+          </p>
+          <button
+            onClick={handleBack}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          >
+            Back to Dashboard
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
+
+export default Result;

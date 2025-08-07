@@ -1,24 +1,22 @@
-import { PlayIcon } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+import { Play } from 'lucide-react';
 
-function ActorCard({ actor, onRun }) {
+function ActorCard({ actor }) {
   const navigate = useNavigate();
 
   const handleRunClick = () => {
-    onRun(actor);
+    navigate(`/dashboard`, { state: { actor } });
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow p-4 flex flex-col justify-between hover:shadow-md transition-all">
-      <div>
-        <h3 className="text-xl font-semibold mb-2">{actor.name}</h3>
-        <p className="text-gray-600 text-sm line-clamp-2">{actor.title || "No description available."}</p>
-      </div>
+    <div className="bg-white shadow-md p-4 rounded-lg hover:shadow-xl transition duration-300">
+      <h2 className="text-lg font-semibold mb-2">{actor.name}</h2>
+      <p className="text-sm text-gray-600 mb-4">{actor.description}</p>
       <button
         onClick={handleRunClick}
-        className="mt-4 flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-xl hover:bg-blue-700 transition-all"
+        className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
       >
-        <PlayIcon className="w-4 h-4" />
+        <Play size={18} />
         Run Actor
       </button>
     </div>

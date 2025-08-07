@@ -1,100 +1,36 @@
 import { useState } from "react";
-import toast from "react-hot-toast";
-import axios from "axios";
-import ActorCard from "../components/ActorCard";
 import { useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
 
 function Home() {
-  const navigate = useNavigate(); // ✅ Move this INSIDE the component
   const [apiKey, setApiKey] = useState("");
-  const [actors, setActors] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const actorsPerPage = 6;
+  const navigate = useNavigate();
 
-  const indexOfLastActor = currentPage * actorsPerPage;
-  const indexOfFirstActor = indexOfLastActor - actorsPerPage;
-  const currentActors = actors.slice(indexOfFirstActor, indexOfLastActor);
-  const totalPages = Math.ceil(actors.length / actorsPerPage);
-
-  const handleFetchActors = async () => {
-    if (!apiKey.trim()) {
-      toast.error("API Key is required");
-      return;
-    }
-    setLoading(true);
-    try {
-      const response = await axios.get("https://api.apify.com/v2/acts", {
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-        },
-      });
-      setActors(response.data.data?.items || []);
-      toast.success("Actors fetched successfully");
-    } catch {
-      toast.error("Failed to fetch actors");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRunActor = (actor) => {
-    console.log("Run actor clicked:", actor);
-    toast.success(`Selected actor: ${actor.name}`);
-    navigate("/result", { state: { actor } });
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const handleLogin = () => {
+    if (!apiKey.trim()) return;
+    localStorage.setItem("apifyApiKey", apiKey.trim());
+    navigate("/dashboard");
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-bold mb-4">Apify Actors Viewer</h1>
-      <div className="flex gap-2 mb-4">
+    <div className="flex items-center justify-center h-screen bg-gradient-to-br from-blue-200 via-white to-purple-200">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">🔐 Apify Dashboard</h1>
         <input
           type="text"
-          placeholder="Enter Apify API Key"
+          placeholder="Enter your Apify API Key"
           value={apiKey}
           onChange={(e) => setApiKey(e.target.value)}
-          className="border rounded px-3 py-2 w-full"
+          className="w-full px-4 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 mb-4"
         />
         <button
-          onClick={handleFetchActors}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          onClick={handleLogin}
+          className="w-full bg-purple-600 text-white py-3 rounded-xl hover:bg-purple-700 flex items-center justify-center gap-2"
         >
-          Fetch Actors
+          <LogIn size={18} />
+          Login
         </button>
       </div>
-
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {currentActors.map((actor) => (
-              <ActorCard key={actor.id} actor={actor} onRun={handleRunActor} />
-            ))}
-          </div>
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-6">
-              {Array.from({ length: totalPages }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => handlePageChange(index + 1)}
-                  className={`px-4 py-1 rounded ${
-                    currentPage === index + 1
-                      ? "bg-blue-600 text-white"
-                      : "bg-gray-200 text-gray-700"
-                  }`}
-                >
-                  {index + 1}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

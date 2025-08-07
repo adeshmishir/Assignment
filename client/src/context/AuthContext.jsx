@@ -1,23 +1,22 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [apiKey, setApiKey] = useState("");
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('apiKey') || '');
 
   const login = (key) => {
     setApiKey(key);
-    setIsLoggedIn(true);
+    localStorage.setItem('apiKey', key);
   };
 
   const logout = () => {
-    setApiKey("");
-    setIsLoggedIn(false);
+    setApiKey('');
+    localStorage.removeItem('apiKey');
   };
 
   return (
-    <AuthContext.Provider value={{ apiKey, isLoggedIn, login, logout }}>
+    <AuthContext.Provider value={{ apiKey, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

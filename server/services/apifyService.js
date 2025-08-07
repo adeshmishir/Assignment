@@ -5,7 +5,6 @@ import axios from 'axios';
 const BASE_URL = process.env.APIFY_API_BASE_URL;
 console.log("BASE_URL:", BASE_URL);
 
-
 const getAuthHeader = (apiKey) => ({
   headers: {
     Authorization: `Bearer ${apiKey}`,
@@ -17,7 +16,6 @@ export const fetchUserActors = async (apiKey) => {
   return res.data;
 };
 
-
 export const fetchActorSchema = async (actorId, apiKey) => {
   const res = await axios.get(`${BASE_URL}/acts/${actorId}`, {
     headers: {
@@ -26,8 +24,6 @@ export const fetchActorSchema = async (actorId, apiKey) => {
   });
   return res.data?.inputSchema || {};
 };
-
-
 
 export const executeActor = async (actorId, input, apiKey) => {
   const res = await axios.post(
